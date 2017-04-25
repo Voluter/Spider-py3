@@ -40,8 +40,7 @@ def main(offset):
         write_to_json(item)
 
 
-##pool = Pool()
-##pool.map(main, [i * 10 for i in range(10)])
+
 for i in range(10):
     main(i*10)
 print('Finished')
