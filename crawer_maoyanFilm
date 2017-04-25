@@ -1,0 +1,47 @@
+import json
+import requests
+import re
+from multiprocessing import Pool
+from bs4 import BeautifulSoup
+
+def get_one_page(url):
+    print('Crawling ' + url)
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.text
+    return None
+
+
+def parse_one_page(html):
+    soup=BeautifulSoup(html,'html.parser')
+    items = soup.find_all('dd')
+    for item in items:
+        inf={}
+        num=item.find_all('i')
+        inf['index']=num[0].string
+        d=item.find_all('p')
+        inf['title']=d[0].string
+        inf['actor']=d[1].string.strip()
+        inf['time']=d[2].string.strip()
+        inf['integer']=num[1].string+num[2].string
+        yield inf
+
+def write_to_json(content):
+    with open('result.txt', 'a', encoding='utf-8') as f:
+        f.write(json.dumps(content, ensure_ascii=False) + '\n')
+        f.close()
+
+
+def main(offset):
+    url = 'http://maoyan.com/board/4?offset=' + str(offset)
+    html = get_one_page(url)
+    for item in parse_one_page(html):
+        print(item)
+        write_to_json(item)
+
+
+##pool = Pool()
+##pool.map(main, [i * 10 for i in range(10)])
+for i in range(10):
+    main(i*10)
+print('Finished')
