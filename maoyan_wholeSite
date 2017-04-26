@@ -1,0 +1,86 @@
+import json
+import requests
+import re
+import os
+from multiprocessing import Pool
+from bs4 import BeautifulSoup
+from multiprocessing.dummy import Pool as ThreadPool
+import csv
+
+
+class Crawer(object):
+    def __init__(self,_url):
+        self.url=_url
+
+    def get_one_page(self,url):
+        print('Crawling '+url)
+        response=requests.get(url)
+        if response.status_code==200:
+            return response.text
+        return None
+
+    def parse_html(self,html):
+        pattern = re.compile(
+            '<h3.*?>(.*?)</h3>.*?ename.*?>(.*?)</div>.*?ellipsis.*?>(.*?)<.*?ellipsis.*?>(.*?)<.*?ellipsis.*?>(.*?)<.*?normal-score.*?width:(.*?);.*?pro-score',
+            re.S)
+        items=re.findall(pattern,html)
+        if not items:
+            return None
+        items=items[0]
+        return {
+            'name':items[0],
+            'enName':items[1],
+            'type':items[2],
+            'country':items[3].strip().split('\n')[0],
+            'showTime':items[4],
+            'rate':items[5]
+        }
+
+    def create_dataFile(self):
+        if not os.path.exists('E:/Crawer.csv'):
+            with open('E:/Crawer.csv','w',encoding='utf-8') as csvfile:
+                fieldnames=['name','enName','type','country','showTime','rate']
+                writer = csv.writer(csvfile)
+                writer.writerrow(('name','enName','type','country','showTime','rate'))
+                csvfile.close()
+
+
+    def save_data(self,data):
+        if data is not None:
+            with open('E:/Crawer.csv','a',encoding='utf-8') as csvfile:
+                fieldnames = ['name', 'enName', 'type', 'country', 'showTime', 'rate']
+                writer = csv.writer(csvfile)
+                writer.writerow((data['name'],data['enName'],data['type'],data['country'],data['showTime'],data['rate']))
+                csvfile.close()
+
+    def one_inf(self,n):
+        
+        url=self.url+str(n)
+        html=self.get_one_page(url)
+        data=self.parse_html(html)
+        self.save_data(data)
+    
+        
+        
+Spider=Crawer('http://maoyan.com/films/')
+##pool=ThreadPool(4)
+##results=pool.map(Spider.one_inf,[i for i in range(1000)])
+##pool.close()
+##pool.join()
+Spider.create_dataFile()
+for i in range(1,100):
+    Spider.one_inf(i)
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
