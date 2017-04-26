@@ -3,6 +3,7 @@ import requests
 import re
 from multiprocessing import Pool
 from bs4 import BeautifulSoup
+from multiprocessing.dummy import Pool as ThreadPool
 
 def get_one_page(url):
     print('Crawling ' + url)
@@ -41,6 +42,8 @@ def main(offset):
 
 
 
-for i in range(10):
-    main(i*10)
-print('Finished')
+pool=ThreadPool(4)
+results=pool.map(main,[i*10 for i in range(10)])
+pool.close()
+pool.join()
+print('finished')
